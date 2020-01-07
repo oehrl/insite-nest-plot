@@ -1,0 +1,15 @@
+<mat-list dense style="position:absolute;z-index:1000">
+  <mat-list-item>
+    <mat-checkbox color="primary" [(ngModel)]="updating" (click)="update()">Update</mat-checkbox>
+  </mat-list-item>
+  <mat-list-item>
+    <mat-checkbox color="primary" [(ngModel)]="following">Follow</mat-checkbox>
+  </mat-list-item>
+</mat-list>
+
+<plotly-plot
+  [data]="graph.data"
+  [layout]="graph.layout"
+  (relayout)="onRelayout($event)"
+  (plotly_click)="following=false"
+  ></plotly-plot>
