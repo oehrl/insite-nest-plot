@@ -67,7 +67,6 @@ export class InsiteNestPlotComponent implements OnInit {
     let params = new HttpParams().set('from', from.toString()).set('to', to.toString());
     this.http.get(this.url + ':8000/spikes', {params: params}).subscribe(res => {
       if (res.hasOwnProperty('simulation_times')) {
-        console.log(res['simulation_times'][0])
         this.graph.data[0].x = res['simulation_times'];
         this.graph.data[0].y = res['gids'];
         if (this.running && this.updating) {
@@ -84,13 +83,11 @@ export class InsiteNestPlotComponent implements OnInit {
   simulationTimeInfo() {
     this.http.get(this.url + ':8080/simulation_time_info').subscribe(res => {
       if (res.hasOwnProperty('current')) {
-        console.log(this.currentTime, res['current'])
         if (this.currentTime == parseInt(res['current'])) {
           this.heartbeat -= 1;
         } else {
           this.heartbeat = 3;
         }
-        console.log(this.heartbeat)
         if (this.heartbeat == 0) {
           this.running = false;
         }

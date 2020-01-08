@@ -474,7 +474,6 @@ var InsiteNestPlotComponent = /** @class */ (function () {
         var params = new _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpParams"]().set('from', from.toString()).set('to', to.toString());
         this.http.get(this.url + ':8000/spikes', { params: params }).subscribe(function (res) {
             if (res.hasOwnProperty('simulation_times')) {
-                console.log(res['simulation_times'][0]);
                 _this.graph.data[0].x = res['simulation_times'];
                 _this.graph.data[0].y = res['gids'];
                 if (_this.running && _this.updating) {
@@ -491,14 +490,12 @@ var InsiteNestPlotComponent = /** @class */ (function () {
         var _this = this;
         this.http.get(this.url + ':8080/simulation_time_info').subscribe(function (res) {
             if (res.hasOwnProperty('current')) {
-                console.log(_this.currentTime, res['current']);
                 if (_this.currentTime == parseInt(res['current'])) {
                     _this.heartbeat -= 1;
                 }
                 else {
                     _this.heartbeat = 3;
                 }
-                console.log(_this.heartbeat);
                 if (_this.heartbeat == 0) {
                     _this.running = false;
                 }
