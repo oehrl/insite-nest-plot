@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 
 @Component({
   selector: 'app-insite-nest-plot',
@@ -9,64 +9,115 @@ import { HttpClient } from '@angular/common/http';
 export class InsiteNestPlotComponent implements OnInit {
   public graph: any;
   public from: number = 0;
-  public to: number = 1000;
-  public updating: boolean = false;
-  public following: boolean = true;
+  public to: number = 10000;
+  public updating: boolean = true;
+  public running: boolean = true;
+  public following: boolean = false;
+  public currentTime: number = 0;
+  public url: string;
+  public heartbeat: number;
+  public error: any;
 
   constructor(
     private http: HttpClient,
   ) { }
 
   ngOnInit() {
+    this.url = 'http://' + (window.location['hostname'] ? window.location['hostname'] : 'localhost');
+
     this.graph = {
       data: [
-        { x: [], y: [], type: 'scattergl', mode: 'markers' },
-        { x: [], y: [], type: 'scattergl', mode: 'markers' },
+        { x: [], y: [], type: 'scattergl', mode: 'markers', hoverinfo: 'none' },
+        // { x: [], y: [], type: 'scattergl', mode: 'markers', hoverinfo: 'none' },
       ],
       layout: {
         width: 800,
         height: 600,
-        xaxis: {range : [this.from, this.to]},
-        yaxis: {fixedrange: true},
+        xaxis: { range: [this.from, this.to] },
+        yaxis: { fixedrange: true },
       },
       config: {
         scrollZoom: true,
       }
     }
-    if (this.updating == false) {
-      this.updating = true;
-      this.update()
-    }
+    this.init()
+  }
+
+  init() {
+    console.log('Init')
+    this.heartbeat = 3;
+    this.running = true;
+    this.simulationTimeInfo()
+    this.update()
   }
 
   update() {
-    this.graph.layout.xaxis.range = [this.from, this.to];
-    var url: string = 'http://localhost:8000/spikes?from=' + this.from + '&to=' + this.to;
-    this.http.get(url).subscribe(res => {
-      if (res.hasOwnProperty('simulation_steps')) {
-        this.graph.data[0].x = res['simulation_steps'];
-        this.graph.data[0].y = res['neuron_ids'];
-        var endtime = parseInt(res['simulation_steps'][res['simulation_steps'].length-1]);
-        if (this.following && endtime) {
-          this.from = Math.max(endtime - 800, 0);
-          this.to = endtime + 200;
-        }
-        if (this.updating) {
-          setTimeout(() => this.update(), 10)
+    this.error = null;
+    this.spikes()
+  }
+
+  spikes() {
+    if (this.following) {
+      this.from = Math.max(0, this.currentTime - 900)
+      this.to = Math.max(1000, this.currentTime + 100)
+      this.graph.layout.xaxis.range = [this.from, this.to];
+    }
+    var from = Math.max(this.from-50, 0);
+    var to = Math.max(this.to+50, 0);
+    let params = new HttpParams().set('from', from.toString()).set('to', to.toString());
+    this.http.get(this.url + ':8000/spikes', {params: params}).subscribe(res => {
+      if (res.hasOwnProperty('simulation_times')) {
+        console.log(res['simulation_times'][0])
+        this.graph.data[0].x = res['simulation_times'];
+        this.graph.data[0].y = res['gids'];
+        if (this.running && this.updating) {
+          setTimeout(() => this.update(), 100)
         }
       }
     }, error => {
       console.log('error', error)
-      this.updating = false;
-     })
+      this.error = error;
+      this.running = false;
+    })
+  }
+
+  simulationTimeInfo() {
+    this.http.get(this.url + ':8080/simulation_time_info').subscribe(res => {
+      if (res.hasOwnProperty('current')) {
+        console.log(this.currentTime, res['current'])
+        if (this.currentTime == parseInt(res['current'])) {
+          this.heartbeat -= 1;
+        } else {
+          this.heartbeat = 3;
+        }
+        console.log(this.heartbeat)
+        if (this.heartbeat == 0) {
+          this.running = false;
+        }
+        this.currentTime = parseInt(res['current']);
+        if (this.running) {
+          setTimeout(() => this.simulationTimeInfo(), 100)
+        }
+
+      }
+    }, error => {
+      console.log('error', error)
+      this.error = error;
+      this.running = false;
+    })
+  }
+
+  onMouseDown(event) {
+    this.following = false;
   }
 
   onRelayout(event) {
-    this.following = false;
     if (event.hasOwnProperty('xaxis.range[0]')) {
-      this.from = Math.max(parseInt(event['xaxis.range[0]']),0);
+      this.from = parseInt(event['xaxis.range[0]']);
       this.to = parseInt(event['xaxis.range[1]']);
-      // this.update()
+      if (this.updating && !this.running) {
+        this.update()
+      }
     }
   }
 

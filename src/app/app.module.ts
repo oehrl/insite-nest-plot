@@ -7,8 +7,13 @@ import * as PlotlyJS from 'plotly.js/dist/plotly.js';
 import { PlotlyModule } from 'angular-plotly.js';
 PlotlyModule.plotlyjs = PlotlyJS;
 
+// import { PlotlyViaCDNModule } from 'angular-plotly.js';
+// PlotlyViaCDNModule.plotlyVersion = 'latest'; // can be `latest` or any version number (i.e.: '1.40.0')
+// PlotlyViaCDNModule.plotlyBundle = 'basic'; // optional: can be null (for full) or 'basic', 'cartesian', 'geo', 'gl3d', 'gl2d', 'mapbox' or 'finance'
+
 import {
   MatCheckboxModule,
+  MatInputModule,
   MatListModule,
 } from '@angular/material';
 
@@ -27,11 +32,14 @@ import { InsiteNestPlotComponent } from './insite-nest-plot/insite-nest-plot.com
     FormsModule,
     HttpClientModule,
     MatCheckboxModule,
+    MatInputModule,
     MatListModule,
     PlotlyModule,
+    // PlotlyViaCDNModule,
   ],
   exports: [
     MatCheckboxModule,
+    MatInputModule,
     MatListModule,
   ],
   providers: [],
