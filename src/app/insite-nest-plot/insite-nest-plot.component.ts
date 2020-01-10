@@ -66,7 +66,11 @@ export class InsiteNestPlotComponent implements OnInit {
     var from = Math.max(this.from - 50, 0);
     var to = Math.max(this.to + 50, 0);
     let params = new HttpParams().set('from', from.toString()).set('to', to.toString());
+<<<<<<< HEAD
     this.http.get(this.url + ':8080/spikes', { params: params }).subscribe(res => {
+=======
+    this.http.get(this.url + ':8080/spikes', {params: params}).subscribe(res => {
+>>>>>>> master
       if (res.hasOwnProperty('simulation_times')) {
         var simulation_times = res['simulation_times'];
         var gids = res['gids'];
