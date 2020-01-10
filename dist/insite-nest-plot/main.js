@@ -472,7 +472,7 @@ var InsiteNestPlotComponent = /** @class */ (function () {
         var from = Math.max(this.from - 50, 0);
         var to = Math.max(this.to + 50, 0);
         var params = new _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HttpParams"]().set('from', from.toString()).set('to', to.toString());
-        this.http.get(this.url + ':8000/spikes', { params: params }).subscribe(function (res) {
+        this.http.get(this.url + ':8080/spikes', { params: params }).subscribe(function (res) {
             if (res.hasOwnProperty('simulation_times')) {
                 _this.graph.data[0].x = res['simulation_times'];
                 _this.graph.data[0].y = res['gids'];
@@ -607,7 +607,7 @@ Object(_angular_platform_browser_dynamic__WEBPACK_IMPORTED_MODULE_3__["platformB
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! /home/spreizer/Projects/insite-nest-plot/src/main.ts */"./src/main.ts");
+module.exports = __webpack_require__(/*! /Users/simon/Code/insite-nest-plot/src/main.ts */"./src/main.ts");
 
 
 /***/ })
