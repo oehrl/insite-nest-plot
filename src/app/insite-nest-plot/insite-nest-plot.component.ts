@@ -28,13 +28,14 @@ export class InsiteNestPlotComponent implements OnInit {
     this.graph = {
       data: [
         { x: [], y: [], type: 'scattergl', mode: 'markers', hoverinfo: 'none' },
-        // { x: [], y: [], type: 'scattergl', mode: 'markers', hoverinfo: 'none' },
+        { x: [], y: [], type: 'scattergl', mode: 'markers', hoverinfo: 'none' },
       ],
       layout: {
         width: 800,
         height: 600,
         xaxis: { range: [this.from, this.to] },
         yaxis: { fixedrange: true },
+        showlegend: false,
       },
       config: {
         scrollZoom: true,
@@ -62,13 +63,24 @@ export class InsiteNestPlotComponent implements OnInit {
       this.to = Math.max(1000, this.currentTime + 100)
       this.graph.layout.xaxis.range = [this.from, this.to];
     }
-    var from = Math.max(this.from-50, 0);
-    var to = Math.max(this.to+50, 0);
+    var from = Math.max(this.from - 50, 0);
+    var to = Math.max(this.to + 50, 0);
     let params = new HttpParams().set('from', from.toString()).set('to', to.toString());
-    this.http.get(this.url + ':8080/spikes', {params: params}).subscribe(res => {
+    this.http.get(this.url + ':8080/spikes', { params: params }).subscribe(res => {
       if (res.hasOwnProperty('simulation_times')) {
-        this.graph.data[0].x = res['simulation_times'];
-        this.graph.data[0].y = res['gids'];
+        var simulation_times = res['simulation_times'];
+        var gids = res['gids'];
+        var data = [
+          { x: [], y: [], type: 'scattergl', mode: 'markers', hoverinfo: 'none' },
+          { x: [], y: [], type: 'scattergl', mode: 'markers', hoverinfo: 'none' },
+        ];
+        gids.forEach((gid, gidx) => {
+          var pidx = gid <= 10000 ? 0 : 1;
+          data[pidx].x.push(simulation_times[gidx]);
+          data[pidx].y.push(gid);
+        })
+        this.graph.data = data;
+
         if (this.running && this.updating) {
           setTimeout(() => this.update(), 100)
         }
