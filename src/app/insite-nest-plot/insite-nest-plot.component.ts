@@ -17,7 +17,7 @@ export class InsiteNestPlotComponent implements OnInit {
   // Visualization
   public graph: any;
   public from: number = 0;
-  public to: number = 10000;
+  public to: number = 1000;
 
   // User options
   public updating: boolean = true;
@@ -55,7 +55,7 @@ export class InsiteNestPlotComponent implements OnInit {
 
   init() {
     console.log('Init');
-    setInterval(() => this.update(), 100);
+    setInterval(() => this.update(), 1000);
   }
 
   reset() {
@@ -73,17 +73,19 @@ export class InsiteNestPlotComponent implements OnInit {
       if (res.hasOwnProperty('current')) {
         const newTime = parseFloat(res['current']);
         if (newTime < this.currentTime) {
-          // Appearently the simulation has been restarted
+          console.log('Simulation has appearently restarted');
           this.reset();
         }
         if (this.state !== State.Running) {
           this.setupSimulation();
         } else {
+          console.log('Update');
           this.querySpikes(this.currentTime || 0, newTime);
           this.currentTime = newTime;
         }
       }
     }, error => {
+      console.error('Simulation time request failed!');
       this.reset();
     });
   }
@@ -93,6 +95,7 @@ export class InsiteNestPlotComponent implements OnInit {
       return;
     }
 
+    console.log('Setup');
     this.state = State.SetupInitited;
     this.http.get(`${this.url}:8080/nest/populations`).subscribe(populationIds => {
       this.populationIds = populationIds as number[];
@@ -101,6 +104,7 @@ export class InsiteNestPlotComponent implements OnInit {
       }
       this.graph.data = this.graphData;
       this.state = State.Running;
+      console.log('Setup Complete!');
     }, error => {
       this.reset();
     });
@@ -112,61 +116,23 @@ export class InsiteNestPlotComponent implements OnInit {
     }
     if (from < to) {
       for (const populationId of this.populationIds) {
+        console.log(`Requesting ${from} to ${to} for ${populationId}`);
         this.http.get(`${this.url}:8080/nest/population/$${populationId}/spikes`).subscribe(spikes => {
           console.log(`${this.url}:8080/nest/population/$${populationId}/spikes`);
           const simulationTimes = spikes['simulation_times'] as number[];
           const gids = spikes['gids'] as number[];
-          console.log(spikes);
           const populationIndex = this.populationIds.indexOf(populationId);
-          console.log(populationId);
-          console.log(this.populationIds);
-          console.log(populationIndex);
           for (let i = 0; i < simulationTimes.length; ++i) {
             (this.graphData[populationIndex].x as number[]).push(simulationTimes[i]);
             (this.graphData[populationIndex].y as number[]).push(gids[i]);
           }
-          console.log(this.graphData);
           this.graph.data = this.graphData;
         }, error => {
+          console.error(`Spike request failed: ${error}`);
           this.reset();
         });
       }
     }
-  }
-
-  spikes() {
-    // if (this.following) {
-    //   this.from = Math.max(0, this.currentTime - 900)
-    //   this.to = Math.max(1000, this.currentTime + 100)
-    //   this.graph.layout.xaxis.range = [this.from, this.to];
-    // }
-    // var from = Math.max(this.from - 50, 0);
-    // var to = Math.max(this.to + 50, 0);
-    // let params = new HttpParams().set('from', from.toString()).set('to', to.toString());
-    // this.http.get(this.url + ':8080/nest/spikes', { params: params }).subscribe(res => {
-    //   if (res.hasOwnProperty('simulation_times')) {
-    //     var simulation_times = res['simulation_times'];
-    //     var gids = res['gids'];
-    //     var data = [
-    //       { x: [], y: [], type: 'scattergl', mode: 'markers', hoverinfo: 'none' },
-    //       { x: [], y: [], type: 'scattergl', mode: 'markers', hoverinfo: 'none' },
-    //     ];
-    //     gids.forEach((gid, gidx) => {
-    //       var pidx = gid <= (625*4) ? 0 : 1;
-    //       data[pidx].x.push(simulation_times[gidx]);
-    //       data[pidx].y.push(gid);
-    //     })
-    //     this.graph.data = data;
-
-    //     if (this.running && this.updating) {
-    //       setTimeout(() => this.update(), 100)
-    //     }
-    //   }
-    // }, error => {
-    //   console.log('error', error)
-    //   this.error = error;
-    //   this.running = false;
-    // });
   }
 
   onMouseDown(event) {
